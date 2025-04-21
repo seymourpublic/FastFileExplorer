@@ -14,13 +14,19 @@
     <Grid RowDefinitions="Auto,*">
         <!-- Header Bar -->
         <StackPanel Orientation="Horizontal" Background="#FF2D2D30" Padding="10" Spacing="10">
+            <Button Content="Back" Click="BackButton_Click" Width="80"/>
             <TextBox x:Name="PathTextBox" Width="400" PlaceholderText="Enter a folder path..."/>
             <Button Content="Load" Click="LoadButton_Click"/>
             <TextBox x:Name="SearchTextBox" Width="300" PlaceholderText="Search by name..." TextChanged="SearchTextBox_TextChanged"/>
         </StackPanel>
 
         <!-- File List -->
-        <ListView x:Name="FileListView" Grid.Row="1" Margin="10" SelectionMode="Single">
+        <ListView x:Name="FileListView"
+          Grid.Row="1"
+          Margin="10"
+          SelectionMode="Single"
+          IsItemClickEnabled="True"
+          ItemClick="FileListView_ItemClick">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="models:FileItem">
                     <StackPanel Orientation="Horizontal" Padding="5">

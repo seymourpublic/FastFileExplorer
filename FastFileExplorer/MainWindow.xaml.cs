@@ -14,6 +14,8 @@ namespace FastFileExplorer
     public sealed partial class MainWindow : Window
     {
         private List<FileItem> allFiles = new List<FileItem>();
+        private Stack<string> navigationHistory = new Stack<string>();
+
 
         public MainWindow()
         {
@@ -51,5 +53,42 @@ namespace FastFileExplorer
                 FileListView.ItemsSource = filtered;
             }
         }
+
+        private async void FileListView_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            if (e.ClickedItem is FileItem clickedItem)
+            {
+                if (clickedItem.IsDirectory)
+                {
+                    navigationHistory.Push(PathTextBox.Text); // Save current path
+
+                    PathTextBox.Text = clickedItem.Path;
+                    allFiles = await FileService.GetDirectoryContentsAsync(clickedItem.Path);
+                    FileListView.ItemsSource = allFiles;
+
+                    SearchTextBox.Text = string.Empty;
+                }
+                else
+                {
+                    // It's a file ? maybe later we can open it with default app
+                    // For now, do nothing
+                }
+            }
+        }
+
+        private async void BackButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (navigationHistory.Count > 0)
+            {
+                var previousPath = navigationHistory.Pop();
+
+                PathTextBox.Text = previousPath;
+                allFiles = await FileService.GetDirectoryContentsAsync(previousPath);
+                FileListView.ItemsSource = allFiles;
+
+                SearchTextBox.Text = string.Empty;
+            }
+        }
+
     }
 }
