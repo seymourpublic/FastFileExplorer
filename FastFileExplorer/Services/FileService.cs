@@ -1,4 +1,5 @@
 ﻿using FastFileExplorer.Models;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -42,6 +43,7 @@ namespace FastFileExplorer.Services
             return items;
         }
 
+
         public static async Task<List<FileItem>> GetDrivesAsync()
         {
             var drives = new List<FileItem>();
@@ -65,5 +67,48 @@ namespace FastFileExplorer.Services
 
             return drives;
         }
+
+        public static async Task<List<FileItem>> GetDirectoryContentsRecursiveAsync(string path)
+        {
+            var items = new List<FileItem>();
+
+            await Task.Run(() =>
+            {
+                try
+                {
+                    if (Directory.Exists(path))
+                    {
+                        foreach (var dir in Directory.GetDirectories(path, "*", SearchOption.AllDirectories))
+                        {
+                            items.Add(new FileItem
+                            {
+                                Name = System.IO.Path.GetFileName(dir),
+                                Path = dir,
+                                IsDirectory = true,
+                                Icon = IconService.GetIconForFile(dir, true)
+                            });
+                        }
+
+                        foreach (var file in Directory.GetFiles(path, "*", SearchOption.AllDirectories))
+                        {
+                            items.Add(new FileItem
+                            {
+                                Name = System.IO.Path.GetFileName(file),
+                                Path = file,
+                                IsDirectory = false,
+                                Icon = IconService.GetIconForFile(file, false)
+                            });
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    // Handle access denied etc.
+                }
+            });
+
+            return items;
+        }
+
     }
 }

@@ -9,6 +9,8 @@ using System.Linq;
 using Microsoft.UI;
 using System;
 using System.IO;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace FastFileExplorer
 {
@@ -25,35 +27,73 @@ namespace FastFileExplorer
             var hwnd = WindowNative.GetWindowHandle(this);
             var windowId = Win32Interop.GetWindowIdFromWindow(hwnd);
             var appWindow = AppWindow.GetFromWindowId(windowId);
-            currentFolder = "C:\\";
+
+            _ = LoadDrivesAsync();
 
             appWindow.Resize(new Windows.Graphics.SizeInt32(900, 600));
+        }
 
+        private async Task LoadDrivesAsync()
+        {
+            allFiles = await FileService.GetDrivesAsync();
+            FileListView.ItemsSource = allFiles;
+            BreadcrumbPanel.Children.Clear(); // No breadcrumb when listing drives
+            SearchTextBox.Text = string.Empty;
+            currentFolder = string.Empty;
         }
 
         private async void LoadButton_Click(object sender, RoutedEventArgs e)
         {
-            if (!string.IsNullOrWhiteSpace(currentFolder))
+            if (string.IsNullOrWhiteSpace(currentFolder))
+            {
+                await LoadDrivesAsync();
+            }
+            else
             {
                 allFiles = await FileService.GetDirectoryContentsAsync(currentFolder);
                 FileListView.ItemsSource = allFiles;
                 SearchTextBox.Text = string.Empty;
-
                 UpdateBreadcrumb(currentFolder);
             }
         }
 
-        private void SearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        private async void SearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             var query = SearchTextBox.Text.ToLower();
 
             if (string.IsNullOrWhiteSpace(query))
             {
+                // Reload drives or current folder
+                if (string.IsNullOrWhiteSpace(currentFolder))
+                    await LoadDrivesAsync();
+                else
+                    allFiles = await FileService.GetDirectoryContentsAsync(currentFolder);
+
                 FileListView.ItemsSource = allFiles;
             }
             else
             {
-                var filtered = allFiles.Where(f => f.Name.ToLower().Contains(query)).ToList();
+                List<FileItem> allItems = new List<FileItem>();
+
+                if (string.IsNullOrWhiteSpace(currentFolder))
+                {
+                    // Search across all drives
+                    foreach (var drive in DriveInfo.GetDrives())
+                    {
+                        if (drive.IsReady)
+                        {
+                            var driveItems = await FileService.GetDirectoryContentsRecursiveAsync(drive.RootDirectory.FullName);
+                            allItems.AddRange(driveItems);
+                        }
+                    }
+                }
+                else
+                {
+                    // Search inside current folder and subfolders
+                    allItems = await FileService.GetDirectoryContentsRecursiveAsync(currentFolder);
+                }
+
+                var filtered = allItems.Where(f => f.Name.ToLower().Contains(query)).ToList();
                 FileListView.ItemsSource = filtered;
             }
         }
@@ -75,8 +115,24 @@ namespace FastFileExplorer
                 }
                 else
                 {
-                    // It's a file ? maybe later we can open it with default app
-                    // For now, do nothing
+                    // ?? OPEN FILE WITH DEFAULT APP
+                    try
+                    {
+                        Process.Start(new ProcessStartInfo
+                        {
+                            FileName = clickedItem.Path,
+                            UseShellExecute = true
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        await new ContentDialog
+                        {
+                            Title = "Error",
+                            Content = $"Could not open file.\n{ex.Message}",
+                            CloseButtonText = "OK"
+                        }.ShowAsync();
+                    }
                 }
             }
         }
