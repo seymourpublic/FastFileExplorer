@@ -9,15 +9,13 @@
     mc:Ignorable="d"
     Title="Fast File Explorer">
 
-
-
     <Grid RowDefinitions="Auto,*">
         <!-- Header Bar -->
-        <StackPanel Orientation="Horizontal" Background="#FF2D2D30" Padding="10" Spacing="10">
-            <Button Content="Back" Click="BackButton_Click" Width="80"/>
-            <TextBox x:Name="PathTextBox" Width="400" PlaceholderText="Enter a folder path..."/>
-            <Button Content="Load" Click="LoadButton_Click"/>
-            <TextBox x:Name="SearchTextBox" Width="300" PlaceholderText="Search by name..." TextChanged="SearchTextBox_TextChanged"/>
+        <StackPanel Orientation="Horizontal" Background="#FF2D2D30" Padding="10" Spacing="10" VerticalAlignment="Center">
+            <Button Content="Back" Click="BackButton_Click" Width="80" />
+            <Button Content="Load" Click="LoadButton_Click" Width="80" />
+            <StackPanel x:Name="BreadcrumbPanel" Orientation="Horizontal" VerticalAlignment="Center" Spacing="5" />
+            <TextBox x:Name="SearchTextBox" Width="300" PlaceholderText="Search by name..." TextChanged="SearchTextBox_TextChanged" />
         </StackPanel>
 
         <!-- File List -->
@@ -29,8 +27,9 @@
           ItemClick="FileListView_ItemClick">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="models:FileItem">
-                    <StackPanel Orientation="Horizontal" Padding="5">
-                        <TextBlock Text="{x:Bind Name}" FontSize="16"/>
+                    <StackPanel Orientation="Horizontal" Padding="5" Spacing="10">
+                        <Image Source="{x:Bind Icon}" Width="24" Height="24" />
+                        <TextBlock Text="{x:Bind Name}" FontSize="16" VerticalAlignment="Center" />
                     </StackPanel>
                 </DataTemplate>
             </ListView.ItemTemplate>

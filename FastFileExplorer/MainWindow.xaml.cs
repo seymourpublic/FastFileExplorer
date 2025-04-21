@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.UI;
 using System;
+using System.IO;
 
 namespace FastFileExplorer
 {
@@ -15,7 +16,7 @@ namespace FastFileExplorer
     {
         private List<FileItem> allFiles = new List<FileItem>();
         private Stack<string> navigationHistory = new Stack<string>();
-
+        private string currentFolder = "";
 
         public MainWindow()
         {
@@ -24,18 +25,21 @@ namespace FastFileExplorer
             var hwnd = WindowNative.GetWindowHandle(this);
             var windowId = Win32Interop.GetWindowIdFromWindow(hwnd);
             var appWindow = AppWindow.GetFromWindowId(windowId);
+            currentFolder = "C:\\";
 
             appWindow.Resize(new Windows.Graphics.SizeInt32(900, 600));
+
         }
 
         private async void LoadButton_Click(object sender, RoutedEventArgs e)
         {
-            var path = PathTextBox.Text;
-
-            if (!string.IsNullOrWhiteSpace(path))
+            if (!string.IsNullOrWhiteSpace(currentFolder))
             {
-                allFiles = await FileService.GetDirectoryContentsAsync(path);
+                allFiles = await FileService.GetDirectoryContentsAsync(currentFolder);
                 FileListView.ItemsSource = allFiles;
+                SearchTextBox.Text = string.Empty;
+
+                UpdateBreadcrumb(currentFolder);
             }
         }
 
@@ -60,13 +64,14 @@ namespace FastFileExplorer
             {
                 if (clickedItem.IsDirectory)
                 {
-                    navigationHistory.Push(PathTextBox.Text); // Save current path
+                    navigationHistory.Push(currentFolder);
 
-                    PathTextBox.Text = clickedItem.Path;
-                    allFiles = await FileService.GetDirectoryContentsAsync(clickedItem.Path);
+                    currentFolder = clickedItem.Path;
+                    allFiles = await FileService.GetDirectoryContentsAsync(currentFolder);
                     FileListView.ItemsSource = allFiles;
 
                     SearchTextBox.Text = string.Empty;
+                    UpdateBreadcrumb(currentFolder);
                 }
                 else
                 {
@@ -82,13 +87,71 @@ namespace FastFileExplorer
             {
                 var previousPath = navigationHistory.Pop();
 
-                PathTextBox.Text = previousPath;
-                allFiles = await FileService.GetDirectoryContentsAsync(previousPath);
+                currentFolder = previousPath;
+                allFiles = await FileService.GetDirectoryContentsAsync(currentFolder);
                 FileListView.ItemsSource = allFiles;
 
                 SearchTextBox.Text = string.Empty;
+                UpdateBreadcrumb(currentFolder);
             }
         }
 
+        private async void BreadcrumbButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is string path)
+            {
+                navigationHistory.Push(currentFolder);
+
+                currentFolder = path;
+                allFiles = await FileService.GetDirectoryContentsAsync(currentFolder);
+                FileListView.ItemsSource = allFiles;
+
+                SearchTextBox.Text = string.Empty;
+                UpdateBreadcrumb(currentFolder);
+            }
+        }
+
+        private void UpdateBreadcrumb(string path)
+        {
+            BreadcrumbPanel.Children.Clear();
+
+            if (string.IsNullOrWhiteSpace(path)) return;
+
+            var parts = path.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                            .Where(p => !string.IsNullOrEmpty(p))
+                            .ToArray();
+
+            string currentPath = "";
+
+            for (int i = 0; i < parts.Length; i++)
+            {
+                if (i == 0 && path.Contains(":"))
+                    currentPath = parts[i];
+                else
+                    currentPath = Path.Combine(currentPath, parts[i]);
+
+                var button = new Button
+                {
+                    Content = parts[i],
+                    Margin = new Thickness(0, 0, 5, 0),
+                    Tag = currentPath,
+                    MinWidth = 40,
+                    Padding = new Thickness(5, 0, 5, 0),
+                };
+                button.Click += BreadcrumbButton_Click;
+
+                BreadcrumbPanel.Children.Add(button);
+
+                if (i < parts.Length - 1)
+                {
+                    BreadcrumbPanel.Children.Add(new TextBlock
+                    {
+                        Text = ">",
+                        VerticalAlignment = VerticalAlignment.Center,
+                        Margin = new Thickness(0, 0, 5, 0)
+                    });
+                }
+            }
+        }
     }
 }

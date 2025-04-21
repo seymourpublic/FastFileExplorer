@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using FastFileExplorer.Models;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using FastFileExplorer.Models;
 
 namespace FastFileExplorer.Services
 {
@@ -21,7 +21,8 @@ namespace FastFileExplorer.Services
                         {
                             Name = System.IO.Path.GetFileName(dir),
                             Path = dir,
-                            IsDirectory = true
+                            IsDirectory = true,
+                            Icon = IconService.GetIconForFile(dir, true)
                         });
                     }
 
@@ -31,13 +32,38 @@ namespace FastFileExplorer.Services
                         {
                             Name = System.IO.Path.GetFileName(file),
                             Path = file,
-                            IsDirectory = false
+                            IsDirectory = false,
+                            Icon = IconService.GetIconForFile(file, false)
                         });
                     }
                 }
             });
 
             return items;
+        }
+
+        public static async Task<List<FileItem>> GetDrivesAsync()
+        {
+            var drives = new List<FileItem>();
+
+            await Task.Run(() =>
+            {
+                foreach (var drive in DriveInfo.GetDrives())
+                {
+                    if (drive.IsReady)
+                    {
+                        drives.Add(new FileItem
+                        {
+                            Name = drive.Name,
+                            Path = drive.RootDirectory.FullName,
+                            IsDirectory = true,
+                            Icon = IconService.GetIconForFile(drive.RootDirectory.FullName, true)
+                        });
+                    }
+                }
+            });
+
+            return drives;
         }
     }
 }
