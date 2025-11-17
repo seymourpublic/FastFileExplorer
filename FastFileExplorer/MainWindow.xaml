@@ -11,28 +11,108 @@
 
     <Grid RowDefinitions="Auto,*">
         <!-- Header Bar -->
-        <StackPanel Orientation="Horizontal" Background="#FF2D2D30" Padding="10" Spacing="10" VerticalAlignment="Center">
-            <Button Content="Back" Click="BackButton_Click" Width="80" />
-            <Button Content="Load" Click="LoadButton_Click" Width="80" />
-            <StackPanel x:Name="BreadcrumbPanel" Orientation="Horizontal" VerticalAlignment="Center" Spacing="5" />
-            <TextBox x:Name="SearchTextBox" Width="300" PlaceholderText="Search by name..." TextChanged="SearchTextBox_TextChanged" />
+        <StackPanel Orientation="Horizontal" Background="#FF2D2D30" Padding="10" Spacing="8">
+            <Button Content="Back" 
+                Click="BackButton_Click" 
+                Style="{StaticResource ButtonStyle}" 
+                Width="80"/>
+            <Button Content="Up" Click="UpButton_Click" Style="{StaticResource ButtonStyle}" Width="80"/>
+            <Button Content="Refresh" Click="RefreshButton_Click" Style="{StaticResource ButtonStyle}" Width="80"/>
+
+            <Button Content="Load" 
+                Click="LoadButton_Click" 
+                Style="{StaticResource ButtonStyle}" 
+                Width="80"/>
+
+            <StackPanel x:Name="BreadcrumbPanel" 
+                    Orientation="Horizontal" 
+                    VerticalAlignment="Center" 
+                    Spacing="5" />
+
+            <TextBox x:Name="SearchTextBox" 
+                 Width="300"
+                 Margin="10,0,0,0"
+                 PlaceholderText="Search by name..."
+                 TextChanged="SearchTextBox_TextChanged"
+                 Style="{StaticResource SearchBoxStyle}"/>
+            
+            <TextBlock x:Name="SearchPlaceholder"
+       VerticalAlignment="Center"
+       Margin="20,0,0,0"
+       Foreground="Gray"
+       IsHitTestVisible="False"
+       />
         </StackPanel>
 
         <!-- File List -->
         <ListView x:Name="FileListView"
-          Grid.Row="1"
-          Margin="10"
-          SelectionMode="Single"
-          IsItemClickEnabled="True"
-          ItemClick="FileListView_ItemClick">
+              Grid.Row="1"
+              Margin="10"
+              SelectionMode="Single"
+              IsItemClickEnabled="True"
+              ItemClick="FileListView_ItemClick"
+              Background="Transparent">
+
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    <Setter Property="Padding" Value="8"/>
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="BorderBrush" Value="Transparent"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="CornerRadius" Value="8"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListViewItem">
+                                <Grid x:Name="RootGrid" Background="{TemplateBinding Background}" CornerRadius="8">
+                                    <ContentPresenter
+                            Margin="8,0"
+                            VerticalAlignment="Center"
+                            />
+                                    <VisualStateManager.VisualStateGroups>
+                                        <VisualStateGroup x:Name="CommonStates">
+                                            <VisualState x:Name="Normal" />
+                                            <VisualState x:Name="PointerOver">
+                                                <Storyboard>
+                                                    <ObjectAnimationUsingKeyFrames Storyboard.TargetName="RootGrid"
+                                                                       Storyboard.TargetProperty="Background">
+                                                        <DiscreteObjectKeyFrame KeyTime="0" Value="#FF3E3E42"/>
+                                                    </ObjectAnimationUsingKeyFrames>
+                                                </Storyboard>
+                                            </VisualState>
+                                        </VisualStateGroup>
+                                    </VisualStateManager.VisualStateGroups>
+                                </Grid>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </ListView.ItemContainerStyle>
+
+
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="models:FileItem">
-                    <StackPanel Orientation="Horizontal" Padding="5" Spacing="10">
-                        <Image Source="{x:Bind Icon}" Width="24" Height="24" />
-                        <TextBlock Text="{x:Bind Name}" FontSize="16" VerticalAlignment="Center" />
-                    </StackPanel>
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" Padding="5">
+                        <Image Source="{x:Bind Icon}" Width="32" Height="32" Margin="5" Grid.Column="0"/>
+
+                        <TextBlock Text="{x:Bind Name}" FontSize="16" VerticalAlignment="Center" Grid.Column="1" />
+
+                        <TextBlock Text="{x:Bind Size}" FontSize="14" Foreground="#AAFFFFFF"
+                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="10,0"
+                       Grid.Column="2" />
+
+                        <TextBlock Text="{x:Bind Type}" FontSize="14" Foreground="#AAFFFFFF"
+                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="10,0"
+                       Grid.Column="3" />
+
+                        <TextBlock Text="{x:Bind ModifiedDate}" FontSize="14" Foreground="#AAFFFFFF"
+                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="10,0"
+                       Grid.Column="4" />
+                    </Grid>
                 </DataTemplate>
             </ListView.ItemTemplate>
+
         </ListView>
     </Grid>
+
 </Window>

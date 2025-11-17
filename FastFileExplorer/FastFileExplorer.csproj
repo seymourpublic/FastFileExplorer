@@ -42,6 +42,8 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.7.250401001" />
+    <PackageReference Include="System.Drawing.Common" Version="9.0.4" />
+    <PackageReference Include="Vanara.PInvoke.Shell32" Version="4.1.2" />
   </ItemGroup>
   <ItemGroup>
     <Content Update="Assets\file-icon.png">
